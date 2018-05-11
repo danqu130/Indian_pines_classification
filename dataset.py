@@ -14,6 +14,7 @@ import random
 from random import shuffle
 from skimage.transform import rotate
 import scipy.ndimage
+from spectral import *
 
 
 # In[2]:
@@ -30,13 +31,26 @@ def loadIndianPinesData():
 # In[3]:
 
 
+def loadHSIData():
+    data_path = os.path.join(os.getcwd(), 'HSI_data')
+    data = open_image(os.path.join(data_path, '92AV3C.lan')).load()
+    data = np.array(data).astype(np.int32)
+    labels = open_image(os.path.join(data_path, '92AV3GT.GIS')).load()
+    labels = np.array(labels).astype(np.uint8)
+    labels.shape = (145, 145)
+    return data, labels
+
+
+# In[4]:
+
+
 def splitTrainTestSet(X, y, testRatio=0.10):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=testRatio, random_state=345,
                                                         stratify=y)
     return X_train, X_test, y_train, y_test
 
 
-# In[4]:
+# In[5]:
 
 
 def oversampleWeakClasses(X, y):
@@ -58,7 +72,7 @@ def oversampleWeakClasses(X, y):
     return newX, newY
 
 
-# In[5]:
+# In[6]:
 
 
 def standartizeData(X):
@@ -69,7 +83,7 @@ def standartizeData(X):
     return newX, scaler
 
 
-# In[6]:
+# In[7]:
 
 
 def applyPCA(X, numComponents=75):
@@ -80,7 +94,7 @@ def applyPCA(X, numComponents=75):
     return newX, pca
 
 
-# In[7]:
+# In[8]:
 
 
 def padWithZeros(X, margin=2):
@@ -91,7 +105,7 @@ def padWithZeros(X, margin=2):
     return newX
 
 
-# In[8]:
+# In[9]:
 
 
 def createPatches(X, y, windowSize=5, removeZeroLabels = True):
@@ -114,7 +128,7 @@ def createPatches(X, y, windowSize=5, removeZeroLabels = True):
     return patchesData, patchesLabels
 
 
-# In[9]:
+# In[10]:
 
 
 def AugmentData(X_train):
@@ -140,31 +154,33 @@ def AugmentData(X_train):
     return X_train
 
 
-# In[10]:
+# In[11]:
 
 
-def savePreprocessedData(X_trainPatches, X_testPatches, y_trainPatches, y_testPatches, windowSize, wasPCAapplied = False, numPCAComponents = 0, testRatio = 0.25):
+def savePreprocessedData(path, X_trainPatches, X_testPatches, y_trainPatches, y_testPatches, windowSize, wasPCAapplied = False, numPCAComponents = 0, testRatio = 0.25):
+    data_path = os.path.join(os.getcwd(), path)
+
     if wasPCAapplied:
-        with open("./data/XtrainWindowSize" + str(windowSize) + "PCA" + str(numPCAComponents) + "testRatio" + str(testRatio) + ".npy", 'bw') as outfile:
+        with open(os.path.join(data_path, "XtrainWindowSize") + str(windowSize) + "PCA" + str(numPCAComponents) + "testRatio" + str(testRatio) + ".npy", 'bw') as outfile:
             np.save(outfile, X_trainPatches)
-        with open("./data/XtestWindowSize" + str(windowSize) + "PCA" + str(numPCAComponents) + "testRatio" + str(testRatio) + ".npy", 'bw') as outfile:
+        with open(os.path.join(data_path, "XtestWindowSize") + str(windowSize) + "PCA" + str(numPCAComponents) + "testRatio" + str(testRatio) + ".npy", 'bw') as outfile:
             np.save(outfile, X_testPatches)
-        with open("./data/ytrainWindowSize" + str(windowSize) + "PCA" + str(numPCAComponents) + "testRatio" + str(testRatio) + ".npy", 'bw') as outfile:
+        with open(os.path.join(data_path, "ytrainWindowSize") + str(windowSize) + "PCA" + str(numPCAComponents) + "testRatio" + str(testRatio) + ".npy", 'bw') as outfile:
             np.save(outfile, y_trainPatches)
-        with open("./data/ytestWindowSize" + str(windowSize) + "PCA" + str(numPCAComponents) + "testRatio" + str(testRatio) + ".npy", 'bw') as outfile:
+        with open(os.path.join(data_path, "ytestWindowSize") + str(windowSize) + "PCA" + str(numPCAComponents) + "testRatio" + str(testRatio) + ".npy", 'bw') as outfile:
             np.save(outfile, y_testPatches)
     else:
-        with open("./data/preXtrainWindowSize" + str(windowSize) + ".npy", 'bw') as outfile:
+        with open(os.path.join(data_path, "preXtrainWindowSize") + str(windowSize) + ".npy", 'bw') as outfile:
             np.save(outfile, X_trainPatches)
-        with open("./data/preXtestWindowSize" + str(windowSize) + ".npy", 'bw') as outfile:
+        with open(os.path.join(data_path, "preXtestWindowSize") + str(windowSize) + ".npy", 'bw') as outfile:
             np.save(outfile, X_testPatches)
-        with open("./data/preytrainWindowSize" + str(windowSize) + ".npy", 'bw') as outfile:
+        with open(os.path.join(data_path, "preytrainWindowSize") + str(windowSize) + ".npy", 'bw') as outfile:
             np.save(outfile, y_trainPatches)
-        with open("./data/preytestWindowSize" + str(windowSize) + ".npy", 'bw') as outfile:
+        with open(os.path.join(data_path, "preytestWindowSize") + str(windowSize) + ".npy", 'bw') as outfile:
             np.save(outfile, y_testPatches)
 
 
-# In[11]:
+# In[12]:
 
 
 # Global Variables
@@ -173,45 +189,46 @@ windowSize = 5
 testRatio = 0.25
 
 
-# In[12]:
-
-
-X, y = loadIndianPinesData()
-
-
 # In[13]:
 
 
-X,pca = applyPCA(X,numComponents=numComponents)
+# X, y = loadIndianPinesData()
+X, y = loadHSIData()
 
 
 # In[14]:
 
 
-XPatches, yPatches = createPatches(X, y, windowSize=windowSize)
+X, pca = applyPCA(X, numComponents=numComponents)
 
 
 # In[15]:
 
 
-X_train, X_test, y_train, y_test = splitTrainTestSet(XPatches, yPatches, testRatio)
+XPatches, yPatches = createPatches(X, y, windowSize=windowSize)
 
 
 # In[16]:
 
 
-X_train, y_train = oversampleWeakClasses(X_train, y_train)
+X_train, X_test, y_train, y_test = splitTrainTestSet(XPatches, yPatches, testRatio)
 
 
 # In[17]:
 
 
-X_train = AugmentData(X_train)
+X_train, y_train = oversampleWeakClasses(X_train, y_train)
 
 
 # In[18]:
 
 
-savePreprocessedData(X_train, X_test, y_train, y_test, windowSize = windowSize, 
+X_train = AugmentData(X_train)
+
+
+# In[19]:
+
+
+savePreprocessedData('predata', X_train, X_test, y_train, y_test, windowSize = windowSize, 
                      wasPCAapplied=True, numPCAComponents = numComponents,testRatio = testRatio)
 
