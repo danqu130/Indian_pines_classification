@@ -113,7 +113,7 @@ y_test = np_utils.to_categorical(y_test)
 
 
 # load the model architecture and weights
-model = load_model('./model/HSI_model_epochs30.h5')
+model = load_model('./model/HSI_model_epochs100.h5')
 
 
 # In[8]:
@@ -145,7 +145,7 @@ X, y = loadHSIData()
 # In[10]:
 
 
-X,pca = applyPCA(X,numComponents=numPCAcomponents)
+X, pca = applyPCA(X,numComponents=numPCAcomponents)
 
 
 # In[11]:
@@ -181,11 +181,11 @@ for i in range(height-PATCH_SIZE+1):
 # In[15]:
 
 
-ground_truth = spectral.imshow(classes = y,figsize =(5,5))
+ground_truth = spectral.imshow(classes=y, figsize=(5, 5))
 
 
 # In[14]:
 
 
-predict_image = spectral.imshow(classes = outputs.astype(int),figsize =(5,5))
+predict_image = spectral.imshow(classes=outputs.astype(int), figsize=(5, 5))
 
