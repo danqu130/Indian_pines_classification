@@ -57,7 +57,7 @@ model.add(Dense(16, activation='softmax'))
 
 
 
-![ode](http://github.com/danqu130/Indian_pines_classification/raw/master/model/model.png)
+![model](model/model.png)
 
 
 ### 训练结果
